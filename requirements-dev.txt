@@ -1,0 +1,8 @@
+# 开发/打包依赖
+-r requirements.txt
+
+# 图标生成（tools/make_icons.py）与部分探针的截图比对
+Pillow>=10.0
+
+# 打 Windows 发行件（tools/build_win.py）
+pyinstaller>=6.0

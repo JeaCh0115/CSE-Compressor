@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSE Compressor · 压缩工作台</title>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="icon" href="/favicon.png" type="image/png">
+</head>
+<body>
+
+<!-- ============ 菜单栏 / 标题栏（无边框一体化） ============ -->
+<nav class="menubar" id="menubar" aria-label="主菜单">
+  <div class="mb-inner">
+    <div class="tb-drag pywebview-drag-region" id="tbBrand" title="CSE Compressor">
+      <div class="mb-logo">
+        <img src="/static/logo-22.png"
+             srcset="/static/logo-22.png 1x, /static/logo-44.png 2x"
+             width="22" height="22" alt="" aria-hidden="true">
+      </div>
+      <span class="tb-app">CSE Compressor <b id="tbVer"></b></span>
+    </div>
+
+    <div class="menu" data-menu="file">
+      <button class="menu-btn" type="button" data-key="F">文件</button>
+      <div class="menu-pop" role="menu" hidden>
+        <button class="menu-item" data-cmd="add-files" role="menuitem">添加文件…<kbd>Ctrl+O</kbd></button>
+        <button class="menu-item" data-cmd="add-folder" role="menuitem">添加文件夹…<kbd>Ctrl+Shift+O</kbd></button>
+        <button class="menu-item" data-cmd="open-archive" role="menuitem">打开归档…<kbd>Ctrl+L</kbd></button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="extract-to" role="menuitem">解压到…<kbd>Ctrl+E</kbd></button>
+        <button class="menu-item" data-cmd="test-archive" role="menuitem">测试归档<kbd>Ctrl+T</kbd></button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="open-staging" role="menuitem" title="拖入窗口的文件会先复制到这里再压缩（拖放拿不到原始路径）">查看拖入文件缓存</button>
+        <button class="menu-item" data-cmd="clear-staging" role="menuitem" title="只删还没压缩的拖入副本，已生成的归档不受影响">清空拖入文件缓存</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="exit" role="menuitem">退出<kbd>Alt+F4</kbd></button>
+      </div>
+    </div>
+
+    <div class="menu" data-menu="edit">
+      <button class="menu-btn" type="button" data-key="E">编辑</button>
+      <div class="menu-pop" role="menu" hidden>
+        <button class="menu-item" data-cmd="sel-all" role="menuitem">全选<kbd>Ctrl+A</kbd></button>
+        <button class="menu-item" data-cmd="sel-invert" role="menuitem">反向选择</button>
+        <button class="menu-item" data-cmd="sel-none" role="menuitem">清除选择</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="copy-to" role="menuitem">复制到…</button>
+        <button class="menu-item" data-cmd="move-to" role="menuitem">移动到…</button>
+        <button class="menu-item danger" data-cmd="delete" role="menuitem">删除（移入回收站）<kbd>Del</kbd></button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="info" role="menuitem">信息…<kbd>Alt+Enter</kbd></button>
+      </div>
+    </div>
+
+    <div class="menu" data-menu="view">
+      <button class="menu-btn" type="button" data-key="V">查看</button>
+      <div class="menu-pop" role="menu" hidden>
+        <button class="menu-item" data-cmd="refresh" role="menuitem">刷新<kbd>F5</kbd></button>
+        <button class="menu-item" data-cmd="up" role="menuitem">上一级<kbd>Backspace</kbd></button>
+        <div class="menu-sep"></div>
+        <button class="menu-item check" data-cmd="toggle-detail" role="menuitem">显示详细信息列</button>
+      </div>
+    </div>
+
+    <div class="menu" data-menu="tools">
+      <button class="menu-btn" type="button" data-key="T">工具</button>
+      <div class="menu-pop" role="menu" hidden>
+        <button class="menu-item" data-cmd="detect" role="menuitem">格式识别…<kbd>Ctrl+I</kbd></button>
+        <button class="menu-item" data-cmd="formats" role="menuitem">支持的压缩格式…</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item check" data-cmd="archive-icons" id="miArchiveIcons" role="menuitem">统一压缩包图标与打开方式</button>
+        <button class="menu-item" data-cmd="archive-icons-remove" role="menuitem">还原压缩包图标与打开方式</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item check" data-cmd="associate" id="miAssociate" role="menuitem">关联 .cse 文件</button>
+        <button class="menu-item check" data-cmd="shellmenu-register" id="miShellMenu" role="menuitem">注册右键菜单（压缩 / 解压）</button>
+        <button class="menu-item" data-cmd="shellmenu-remove" role="menuitem">移除右键菜单</button>
+        <button class="menu-item" data-cmd="refresh-icons" role="menuitem">刷新资源管理器图标缓存</button>
+        <button class="menu-item" data-cmd="default-apps" role="menuitem">打开系统「默认应用」设置…</button>
+      </div>
+    </div>
+
+    <div class="menu" data-menu="settings">
+      <button class="menu-btn" type="button" data-key="S">设置</button>
+      <div class="menu-pop" role="menu" hidden>
+        <div class="menu-item submenu" data-sub="theme" tabindex="0">主题<span class="sub-arrow">›</span></div>
+        <div class="menu-item submenu" data-sub="format" tabindex="0">默认归档格式<span class="sub-arrow">›</span></div>
+        <div class="menu-item submenu" data-sub="method" tabindex="0">默认压缩方式<span class="sub-arrow">›</span></div>
+        <div class="menu-sep"></div>
+        <button class="menu-item check" data-cmd="toggle-solid" role="menuitem">固实压缩</button>
+        <button class="menu-item check" data-cmd="toggle-dedup" role="menuitem">内容去重</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="reset-settings" role="menuitem">恢复默认设置</button>
+      </div>
+    </div>
+
+    <div class="menu" data-menu="about">
+      <button class="menu-btn" type="button" data-key="A">关于</button>
+      <div class="menu-pop" role="menu" hidden>
+        <button class="menu-item" data-cmd="about" role="menuitem">关于 CSE Compressor…</button>
+        <button class="menu-item" data-cmd="licenses" role="menuitem">开源许可与致谢…</button>
+        <div class="menu-sep"></div>
+        <button class="menu-item" data-cmd="homepage" role="menuitem">访问项目主页</button>
+        <button class="menu-item" data-cmd="updates" role="menuitem">检查更新…</button>
+      </div>
+    </div>
+
+    <div class="mb-spacer tb-drag pywebview-drag-region"></div>
+    <span class="mb-badge" id="mbChannel" hidden>BETA</span>
+    <div class="tb-controls" id="tbControls" hidden>
+      <button class="tb-btn" id="winMin" aria-label="最小化">
+        <svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+      <button class="tb-btn" id="winMax" aria-label="最大化或还原">
+        <svg viewBox="0 0 12 12" id="winMaxIcon"><rect x="2.5" y="2.5" width="7" height="7" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
+      </button>
+      <button class="tb-btn tb-close" id="winClose" aria-label="关闭">
+        <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============ 工具栏 ============ -->
+<div class="toolbar" id="toolbar" role="toolbar" aria-label="常用操作">
+  <button class="tool" data-act="add" title="压缩所选项目（Ctrl+N）">
+    <span class="tool-ico i-add">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3.5 7.5h6l1.6 2h9.4v9.2a1.8 1.8 0 0 1-1.8 1.8H5.3a1.8 1.8 0 0 1-1.8-1.8V7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12.5 11.4v5.2M9.9 14h5.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+    </span><em>添加</em>
+  </button>
+  <button class="tool" data-act="extract" title="解压所选归档（Ctrl+E）">
+    <span class="tool-ico i-extract">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3.5 8h6l1.6 2h9.4v8.7a1.8 1.8 0 0 1-1.8 1.8H5.3a1.8 1.8 0 0 1-1.8-1.8V8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 17.2V9.4m0 0-2.6 2.6M12 9.4l2.6 2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span><em>解压</em>
+  </button>
+  <button class="tool" data-act="test" title="完整性测试（Ctrl+T）">
+    <span class="tool-ico i-test">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M12 3.2 5.4 5.6v6c0 4.2 2.8 7.5 6.6 9.2 3.8-1.7 6.6-5 6.6-9.2v-6L12 3.2Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9.2 11.8 2 2 3.6-3.9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span><em>测试</em>
+  </button>
+
+  <span class="tool-sep"></span>
+
+  <button class="tool" data-act="copy" title="复制所选项目到指定文件夹">
+    <span class="tool-ico i-copy">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="4" y="3.5" width="10.5" height="13" rx="1.8" stroke="currentColor" stroke-width="1.6"/><rect x="9.5" y="7.5" width="10.5" height="13" rx="1.8" stroke="currentColor" stroke-width="1.6" fill="var(--bg-soft)"/></svg>
+    </span><em>复制到</em>
+  </button>
+  <button class="tool" data-act="move" title="移动所选项目到指定文件夹">
+    <span class="tool-ico i-move">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M3.5 7.5h6l1.6 2h9.4v9.2a1.8 1.8 0 0 1-1.8 1.8H5.3a1.8 1.8 0 0 1-1.8-1.8V7.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9.4 14.2h6.4m0 0-2.4-2.4m2.4 2.4-2.4 2.4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </span><em>移动</em>
+  </button>
+  <button class="tool" data-act="delete" title="删除所选项目（移入回收站）">
+    <span class="tool-ico i-delete">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M5 6.6h14M9.6 6.6V4.4h4.8v2.2M7.2 6.6l.8 12.1a1.8 1.8 0 0 0 1.8 1.6h4.4a1.8 1.8 0 0 0 1.8-1.6l.8-12.1" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="m9.2 4.4 5.6 15.9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity=".55"/></svg>
+    </span><em>删除</em>
+  </button>
+
+  <span class="tool-sep"></span>
+
+  <button class="tool" data-act="info" title="查看所选项目信息（Alt+Enter）">
+    <span class="tool-ico i-info">
+      <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.6" stroke="currentColor" stroke-width="1.6"/><path d="M12 10.6v6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="7.6" r="1.15" fill="currentColor"/></svg>
+    </span><em>信息</em>
+  </button>
+
+  <div class="tool-spacer"></div>
+
+  <button class="tool icon-only" data-act="theme" id="themeBtn" title="切换主题">☾</button>
+</div>
+
+<!-- ============ 路径栏 ============ -->
+<div class="pathbar">
+  <button class="pb-btn" id="navUp" title="上一级 (Backspace)" aria-label="上一级">
+    <svg viewBox="0 0 24 24"><path d="M12 19V5m0 0-6.2 6.2M12 5l6.2 6.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+  </button>
+  <div class="pb-field">
+    <span class="pb-icon" id="pbIcon">
+      <svg viewBox="0 0 20 20" fill="none"><path d="M2.6 6h5l1.4 1.7h8.4v7.6a1.5 1.5 0 0 1-1.5 1.5H4.1a1.5 1.5 0 0 1-1.5-1.5V6Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
+    </span>
+    <input class="pb-input" id="pathInput" spellcheck="false" placeholder="输入路径，如 C:\Users">
+  </div>
+  <button class="pb-btn text" id="navGo">前往</button>
+  <button class="pb-btn" id="navRefresh" title="刷新 (F5)" aria-label="刷新">
+    <svg viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4.2v4.6h-4.6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+  </button>
+  <button class="pb-btn text" id="navDisk" hidden>返回磁盘</button>
+</div>
+
+<!-- ============ 文件列表 ============ -->
+<div class="listwrap" id="listwrap" tabindex="0">
+  <table class="filetable" id="filetable">
+    <colgroup>
+      <col class="col-name"><col class="col-size"><col class="col-time">
+      <col class="col-time"><col class="col-note"><col class="col-flag"><col class="col-flag">
+    </colgroup>
+    <thead><tr id="fileHead">
+      <th class="c-name">名称</th>
+      <th class="c-size">大小</th>
+      <th class="c-time">修改时间</th>
+      <th class="c-time">创建时间</th>
+      <th class="c-note">注释</th>
+      <th class="c-flag">文件夹</th>
+      <th class="c-flag">文件</th>
+    </tr></thead>
+    <tbody id="fileBody">
+      <tr class="empty-row"><td colspan="7">正在读取…</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ============ 任务进度条 ============ -->
+<div class="taskbar" id="taskbar" hidden>
+  <span class="tk-label" id="tkLabel">准备中…</span>
+  <div class="tk-bar"><div class="tk-fill" id="tkFill"></div></div>
+  <span class="tk-pct" id="tkPct">0%</span>
+  <button class="tk-close" id="tkClose" title="收起">✕</button>
+</div>
+
+<!-- ============ 紧凑模式：右键「压缩」只显示这一块 ============ -->
+<div class="cmpbox" id="cmpBox" hidden>
+  <div class="cmp-head">
+    <span class="cmp-ico" id="cmpIco">▣</span>
+    <strong id="cmpTitle">正在压缩…</strong>
+  </div>
+  <div class="cmp-bar"><i id="cmpFill"></i></div>
+  <div class="cmp-sub" id="cmpSub">准备中…</div>
+  <div class="cmp-actions">
+    <button class="btn ghost" id="cmpOpen" hidden>打开所在文件夹</button>
+    <button class="btn ghost" id="cmpMain" hidden>打开主界面</button>
+    <button class="btn primary" id="cmpDone" hidden>完成</button>
+  </div>
+</div>
+
+<!-- ============ 状态栏 ============ -->
+<div class="statusbar">
+  <span id="statSel">选定 0 / 0 个项目</span>
+  <span class="st-sep"></span>
+  <span id="statInfo" class="st-muted"></span>
+  <span class="st-grow"></span>
+  <span id="statResult"></span>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<!-- ============ 通用对话框 ============ -->
+<div class="modal" id="dlg" hidden>
+  <div class="modal-card dlg-card" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <strong id="dlgTitle"></strong>
+      <button class="icon-btn" id="dlgClose" aria-label="关闭">✕</button>
+    </div>
+    <div class="dlg-body" id="dlgBody"></div>
+  </div>
+</div>
+
+<!-- ============ 文件 / 文件夹选择器 ============ -->
+<div class="modal" id="modal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <strong id="modalTitle">选择文件</strong>
+      <button class="icon-btn" id="modalClose">✕</button>
+    </div>
+    <div class="modal-path">
+      <button class="btn ghost icon" id="upBtn" title="上一级">↑</button>
+      <input class="input" id="modalPath" spellcheck="false">
+      <button class="btn ghost" id="goBtn">前往</button>
+      <button class="btn ghost" id="pickDirBtn">选此文件夹</button>
+    </div>
+    <ul class="browser-list" id="browserList"></ul>
+    <div class="modal-foot">
+      <span id="modalSel" class="hint"></span>
+      <div>
+        <button class="btn ghost" id="modalCancel">取消</button>
+        <button class="btn primary" id="modalOk">确定</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

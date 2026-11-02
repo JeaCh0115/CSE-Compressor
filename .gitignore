@@ -1,0 +1,32 @@
+# ---- 构建产物（全部可重新生成，不进版本库）----
+build/
+dist/
+packaging/build/
+packaging/installer/payload.zip
+*.spec
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# ---- 运行时与临时文件 ----
+*.log
+a.cse
+.cse_upload/
+.icons_small.png
+probe.png
+*.tmp
+
+# ---- 编辑器 / 系统 ----
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ---- 本地协作记录（含个人机器信息，不公开）----
+.workbuddy/

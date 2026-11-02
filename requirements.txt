@@ -1,0 +1,11 @@
+# CSE Compressor 运行依赖（Windows，Python 3.10+）
+#
+# 引擎（csengine）与 CLI 只用标准库，装不装这些都能压缩/解压；
+# 下面四项是图形界面与 7z 互操作需要的。
+
+# 桌面外壳：原生窗口 + WebView2（Windows 上走 EdgeChromium，需要 pythonnet）
+pywebview>=5.0
+pythonnet>=3.0.0 ; sys_platform == "win32"
+
+# 7z 读写后端（缺省时会回落到系统的 7z.exe，再不行才报错）
+py7zr>=0.21

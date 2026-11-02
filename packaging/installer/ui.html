@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>CSE Compressor 安装向导</title>
+<style>
+:root{
+  --bg:#f5f6f8; --panel:#fff; --line:#e6e9ee; --line2:#dfe3e9;
+  --text:#111827; --text2:#515a68; --text3:#98a0ad;
+  --accent:#4f46e5; --accent-h:#4338ca; --accent-soft:#eceefc;
+  --err:#b91c1c; --ok:#047857;
+  --warn-bg:#fff8e8; --warn-line:#f0d9a8; --warn-text:#8a5b0b;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:"Segoe UI Variable Text","Segoe UI","Microsoft YaHei",system-ui,sans-serif;
+  background:var(--bg); color:var(--text); font-size:13.5px; overflow:hidden;
+  display:flex; flex-direction:column; -webkit-font-smoothing:antialiased;
+}
+/* 焦点：默认不画浏览器默认黑框，键盘 Tab 才画品牌色环 */
+body:not(.kbd-nav) :focus{outline:none}
+body.kbd-nav :focus-visible{outline:2px solid rgba(79,70,229,.55);outline-offset:2px}
+
+/* ---------- 自绘标题栏 ---------- */
+#titlebar{
+  height:34px; flex:none; display:flex; align-items:center; gap:8px;
+  padding:0 5px 0 12px; -webkit-user-select:none; user-select:none;
+}
+.tb-drag{display:flex; align-items:center; gap:7px}
+.tb-logo{width:16px;height:16px;display:block;object-fit:contain}
+.tb-brand{font-size:12px;color:var(--text2);letter-spacing:.2px}
+.tb-brand b{font-family:Consolas,monospace;font-size:10.5px;font-weight:400;color:var(--text3);margin-left:5px}
+.tb-flex{flex:1; align-self:stretch}
+.tb-btn{
+  width:34px;height:24px;border:0;background:transparent;color:var(--text2);
+  display:grid;place-items:center;cursor:pointer;border-radius:5px;padding:0;
+  transition:background .12s ease,color .12s ease;
+}
+.tb-btn:hover{background:#e9ebef;color:var(--text)}
+.tb-btn.tb-close:hover{background:#e81123;color:#fff}
+.tb-btn svg{width:11px;height:11px;display:block}
+
+/* ---------- 卡片：贴住窗口，不留大圈空白 ---------- */
+.stage{flex:1; display:flex; align-items:center; justify-content:center; padding:0 10px 10px}
+.panel{
+  width:100%; max-width:560px; background:var(--panel);
+  border:1px solid var(--line); border-radius:12px; padding:16px 20px 14px;
+  box-shadow:0 10px 24px -20px rgba(16,24,40,.5);
+}
+
+.head{display:flex; align-items:center; gap:12px}
+.logo{width:38px;height:38px;flex:none;object-fit:contain}
+.head h1{font-size:16px;font-weight:600;letter-spacing:-.1px}
+.meta{margin-top:4px;display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text3)}
+.chan{font-size:10px;line-height:1;padding:3px 6px;border-radius:999px;
+  color:#7c4a03;background:#fdf3d8;border:1px solid #f2e0b0;letter-spacing:.4px}
+.build{margin-top:3px;font-size:11px;color:var(--text3)}
+
+.field{margin-top:12px}
+.field label{display:block;font-size:12px;color:var(--text2);margin-bottom:5px}
+.dirline{display:flex;gap:7px}
+.dirline input{
+  flex:1; min-width:0; height:32px; padding:0 10px; border:1px solid var(--line2);
+  border-radius:7px; background:#fbfbfc; color:var(--text);
+  font-size:12px; font-family:Consolas,monospace;
+}
+.dirline input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(79,70,229,.12)}
+.dirline button{
+  flex:none; height:32px; padding:0 13px; border:1px solid var(--line2); border-radius:7px;
+  background:#fff; color:var(--text2); font:inherit; font-size:12px; cursor:pointer;
+}
+.dirline button:hover{border-color:var(--accent);color:var(--accent)}
+
+/* 三个选项压成单行：标题 + 右侧灰字说明 */
+.opts{margin-top:8px;display:grid}
+.opt{display:flex;align-items:center;gap:9px;height:27px;cursor:pointer;font-size:13px}
+.opt input{flex:none;width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
+.opt .hint{margin-left:auto;font-size:11px;color:var(--text3);white-space:nowrap}
+
+.notice{
+  margin-top:10px; padding:7px 11px; border-radius:7px; font-size:12px; line-height:1.45;
+  background:var(--warn-bg); border:1px solid var(--warn-line); color:var(--warn-text);
+}
+
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:12px}
+.btn{height:32px;padding:0 18px;border-radius:7px;border:1px solid transparent;
+  font:inherit;font-size:13px;cursor:pointer;transition:background .12s,border-color .12s}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-h)}
+.btn.primary:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:#fff;border-color:var(--line2);color:var(--text2)}
+.btn.ghost:hover{color:var(--text);background:#fafbfc}
+.btn.danger{background:#dc2626;color:#fff}
+.btn.danger:hover{background:#b91c1c}
+
+/* ---------- 进度 ---------- */
+#v-progress h2{font-size:15px;font-weight:600;margin-bottom:12px}
+.pmeta{display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:7px}
+.bar{height:7px;border-radius:999px;background:#eef0f4;overflow:hidden}
+.bar i{display:block;height:100%;width:0;border-radius:999px;
+  background:var(--accent);transition:width .25s ease}
+.msg{margin-top:7px;font-family:Consolas,monospace;font-size:11px;color:var(--text3);
+  min-height:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- 完成 ---------- */
+.done{text-align:center;padding:4px 0 0}
+.done .big{
+  width:42px;height:42px;margin:0 auto 10px;border-radius:50%;
+  display:grid;place-items:center;font-size:20px;line-height:1;
+  background:var(--accent-soft);color:var(--accent);
+}
+.done .big.ok{background:#e7f6ef;color:var(--ok)}
+.done .big.warn{background:#fdf4e3;color:var(--warn-text)}
+.done .big.err{background:#fdecec;color:var(--err)}
+.done h2{font-size:16px;font-weight:600}
+.done p{margin-top:6px;font-size:12px;color:var(--text2);line-height:1.6;word-break:break-word}
+.err{color:var(--err)}
+.warn-un{margin-top:10px;font-size:12.5px;color:var(--text2);line-height:1.7}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div id="titlebar">
+  <div class="tb-drag pywebview-drag-region tb-brand">
+    <img class="tb-logo" src="app-logo.png" alt="" onerror="this.style.visibility='hidden'">
+    <span>CSE Compressor<b id="tbVer"></b></span>
+  </div>
+  <div class="tb-drag pywebview-drag-region tb-flex"></div>
+  <button class="tb-btn" id="tbMin" aria-label="最小化">
+    <svg viewBox="0 0 12 12"><path d="M2 6h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+  </button>
+  <button class="tb-btn tb-close" id="tbClose" aria-label="关闭">
+    <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+  </button>
+</div>
+
+<div class="stage">
+<div class="panel">
+
+  <!-- ============ 安装：欢迎 ============ -->
+  <div id="v-welcome">
+    <div class="head">
+      <img class="logo" src="app-logo.png" alt="logo" onerror="this.style.visibility='hidden'">
+      <div>
+        <h1>CSE Compressor</h1>
+        <div class="meta"><span id="t-ver"></span><span class="chan">BETA</span></div>
+        <div class="build" id="t-build"></div>
+      </div>
+    </div>
+    <div class="field">
+      <label for="dir">安装位置</label>
+      <div class="dirline">
+        <input id="dir" spellcheck="false">
+        <button onclick="pywebview.api.choose_dir()">浏览…</button>
+      </div>
+    </div>
+    <div id="upgNotice" class="notice" hidden>已安装过旧版本，将原地覆盖升级，设置与文件关联保留。</div>
+    <div class="opts">
+      <label class="opt"><input type="checkbox" id="optStart" checked>
+        <span>开始菜单快捷方式</span><span class="hint">出现在「开始 → 程序」</span></label>
+      <label class="opt"><input type="checkbox" id="optDesk" checked>
+        <span>桌面快捷方式</span><span class="hint">双击直接打开</span></label>
+      <label class="opt"><input type="checkbox" id="optAssoc" checked>
+        <span>关联 .cse 归档</span><span class="hint">双击 .cse 直接打开</span></label>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" onclick="pywebview.api.close()">取消</button>
+      <button class="btn primary" id="goBtn" onclick="startInstall()">开始安装</button>
+    </div>
+  </div>
+
+  <!-- ============ 卸载：确认 ============ -->
+  <div id="v-unconfirm" hidden>
+    <div class="head">
+      <img class="logo" src="app-logo.png" alt="logo" onerror="this.style.visibility='hidden'">
+      <div><h1>卸载 CSE Compressor</h1>
+        <div class="meta"><span id="u-ver"></span></div></div>
+    </div>
+    <p class="warn-un">将移除程序文件、快捷方式、.cse 文件关联与卸载信息。<br>
+      你的设置与压缩过的归档不受影响。</p>
+    <div class="actions">
+      <button class="btn ghost" onclick="pywebview.api.close()">取消</button>
+      <button class="btn danger" onclick="startUninstall()">确认卸载</button>
+    </div>
+  </div>
+
+  <!-- ============ 进度 ============ -->
+  <div id="v-progress" hidden>
+    <h2 id="p-title">正在安装…</h2>
+    <div class="pmeta"><span id="p-stage">准备中</span><span id="p-pct">0%</span></div>
+    <div class="bar"><i id="p-bar"></i></div>
+    <div class="msg" id="p-msg"></div>
+  </div>
+
+  <!-- ============ 完成 ============ -->
+  <div id="v-done" hidden>
+    <div class="done">
+      <div class="big" id="d-icon"></div>
+      <h2 id="d-title">安装完成</h2>
+      <p id="d-sub"></p>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="d-launch" onclick="launchNow()">立即运行</button>
+      <button class="btn primary" onclick="pywebview.api.close()">完成</button>
+    </div>
+  </div>
+
+</div>
+</div><!-- /stage -->
+
+<script>
+const MODE = "__MODE__";
+let installedExe = null;
+const $ = (s) => document.querySelector(s);
+const setTxt = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+
+const STAGES = {extract:"释放程序文件", shortcut:"创建快捷方式", assoc:"注册系统集成",
+                registry:"写入注册信息", uninstall:"清理安装", done:"完成"};
+
+document.getElementById("tbMin").onclick = () => pywebview.api.minimize();
+document.getElementById("tbClose").onclick = () => pywebview.api.close();
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Tab") document.body.classList.add("kbd-nav");
+  else if (e.key === "Enter" && !$("#v-welcome").hidden) startInstall();
+});
+document.addEventListener("mousedown", () => document.body.classList.remove("kbd-nav"));
+
+function show(id) {
+  ["v-welcome","v-unconfirm","v-progress","v-done"].forEach((v) => { $("#"+v).hidden = v !== id; });
+  const a = document.activeElement;
+  if (a && a.blur) a.blur();   // 换页后不留焦点框
+}
+
+window.__progress = (p) => {
+  $("#p-bar").style.width = p.pct + "%";
+  $("#p-pct").textContent = p.pct + "%";
+  $("#p-msg").textContent = p.msg || "";
+  if (p.stage) setTxt("p-stage", STAGES[p.stage] || p.stage);
+};
+
+window.__setDir = (d) => { $("#dir").value = d; };
+
+window.__err = (m) => {
+  let t = document.getElementById("py-toast");
+  if (!t) {
+    t = document.createElement("div");
+    t.id = "py-toast";
+    t.style.cssText = "position:fixed;left:50%;bottom:20px;transform:translateX(-50%);" +
+      "background:#b91c1c;color:#fff;padding:8px 15px;border-radius:8px;font-size:12px;" +
+      "box-shadow:0 10px 24px -12px rgba(0,0,0,.5);z-index:99;transition:opacity .3s";
+    document.body.appendChild(t);
+  }
+  t.textContent = m;
+  t.style.opacity = "1";
+  clearTimeout(t._h);
+  t._h = setTimeout(() => (t.style.opacity = "0"), 3500);
+};
+
+function setDone(kind, icon, title, sub) {
+  show("v-done");
+  const el = $("#d-icon");
+  el.textContent = icon;
+  el.className = "big " + kind;
+  setTxt("d-title", title);
+  const s = $("#d-sub");
+  s.textContent = sub;
+  s.className = kind === "err" ? "err" : "";
+}
+
+window.__done = (r) => {
+  const un = MODE === "uninstall";
+  if (r.ok && r.elevated) {
+    setDone("warn", "!", "等待管理员授权",
+      "所选目录需要管理员权限，请在 UAC 窗口点「是」，安装会自动继续。" +
+      (r.dir ? "（" + r.dir + "）" : ""));
+    $("#d-launch").hidden = true;
+    return;
+  }
+  if (r.ok) {
+    setDone("ok", "✓", un ? "卸载完成" : "安装完成",
+      un ? "程序文件与相关系统设置已移除，感谢试用。"
+         : "CSE Compressor 已就绪，双击文件即可解压。");
+    installedExe = r.exe || null;
+    if (un || !installedExe) $("#d-launch").hidden = true;
+  } else {
+    setDone("err", "×", un ? "卸载出错" : "安装失败", r.error || "未知错误");
+    $("#d-launch").hidden = true;
+  }
+};
+
+function startInstall() {
+  if (!$("#v-progress").hidden) return;
+  show("v-progress");
+  setTxt("p-title", "正在安装…");
+  setTxt("p-stage", "准备中");
+  setTxt("p-pct", "0%");
+  $("#p-bar").style.width = "0%";
+  $("#p-msg").textContent = "";
+  pywebview.api.install({
+    dir: $("#dir").value.trim(),
+    startmenu: $("#optStart").checked,
+    desktop: $("#optDesk").checked,
+    assoc: $("#optAssoc").checked,
+  });
+}
+
+function startUninstall() {
+  show("v-progress");
+  setTxt("p-title", "正在卸载…");
+  setTxt("p-stage", "准备中");
+  pywebview.api.confirm_uninstall();
+}
+
+function launchNow() { if (installedExe) pywebview.api.launch(installedExe); }
+
+function onReady() {
+  pywebview.api.info().then((info) => {
+    setTxt("t-ver", "v" + info.version);
+    setTxt("t-build", "构建于 " + info.build_time + " · 安装包 " + info.payload_mb + " MB");
+    setTxt("u-ver", "v" + info.version);
+    setTxt("tbVer", "v" + info.version);
+    $("#dir").value = info.default_dir;
+    if (info.installed) $("#upgNotice").hidden = false;
+  }).catch(() => {});
+}
+window.addEventListener("pywebviewready", onReady);
+
+if (MODE === "uninstall") show("v-unconfirm"); else show("v-welcome");
+</script>
+</body>
+</html>
