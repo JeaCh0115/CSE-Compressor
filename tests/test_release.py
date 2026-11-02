@@ -507,6 +507,34 @@ class TestArchiveProgId(unittest.TestCase):
         self.assertIsInstance(winassoc.resolve_open_exe(".zip"), str)
 
 
+class TestConsoleEncoding(unittest.TestCase):
+    """英文版 Windows 控制台是 cp1252，中文输出会抛 UnicodeEncodeError。
+
+    真机是中文系统（cp936）所以一直没看见；CI 上第一条「压缩中 -> ...」就把
+    命令带走了。用 PYTHONIOENCODING 把流按 cp1252 钉死来复现。
+    """
+
+    ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def _run(self, *args):
+        import subprocess
+        env = dict(os.environ, PYTHONIOENCODING="cp1252", PYTHONPATH=self.ROOT)
+        return subprocess.run([sys.executable, os.path.join(self.ROOT, "run.py"), *args],
+                              cwd=self.ROOT, env=env, capture_output=True, timeout=120)
+
+    def test_cli_chinese_output_on_cp1252_console(self):
+        r = self._run("info", "README.md")
+        self.assertEqual(r.returncode, 0,
+                         "cp1252 控制台下命令崩了：" + r.stderr.decode("utf-8", "replace")[-600:])
+        self.assertIn("路径", r.stdout.decode("utf-8", "replace"))
+
+    def test_setup_console_is_idempotent(self):
+        from cscli.console import setup_console
+        setup_console()
+        setup_console()
+        self.assertTrue(callable(setup_console))
+
+
 if __name__ == "__main__":
     unittest.main()
 

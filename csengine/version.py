@@ -8,12 +8,12 @@ Windows 文件版本号取四段整数（0, 1, 0, 3），由 tools/build_win.py 
 把真实的打包时间与构建号烧进发行件；开发态则由 _build.py 里的默认值兜底。
 """
 
-__version__ = "0.1.0-beta.12"
+__version__ = "0.1.0-beta.13"
 CHANNEL = "beta"
 CHANNEL_LABEL = "Beta 公测版"
 
 # 用于 Windows 资源（四段整数）与比较
-VERSION_TUPLE = (0, 1, 0, 12)
+VERSION_TUPLE = (0, 1, 0, 13)
 
 PRODUCT = "CSE Compressor"
 COMPANY = "CSE Project"

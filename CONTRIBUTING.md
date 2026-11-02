@@ -34,7 +34,7 @@ Windows 10/11 + Python 3.10+（开发机用 3.13）。引擎 `csengine/` 与命�
 ## 测试
 
 ```bash
-python -m unittest discover -s tests        # 93 项，约 10 秒
+python -m unittest discover -s tests        # 97 项，约 10 秒
 python tools/ui_probe.py                    # 55 项界面回归，需要 Edge
 python tools/dev_pipeline.py                # 全流水线：clean → compile → 测试 → 互操作矩阵 → 冒烟
 ```

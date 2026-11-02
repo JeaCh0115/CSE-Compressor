@@ -40,6 +40,8 @@ def _bootstrap():
 
 def main():
     _bootstrap()
+    from cscli.console import setup_console
+    setup_console()      # 英文系统控制台打印中文会直接崩，先把代码页/流处理好
     args = sys.argv[1:]
     if args and args[0] in ("app", "desktop"):
         from csgui.desktop import main as desktop_main

@@ -18,6 +18,11 @@ from . import exclusive
 from . import exttools
 from .compressors import METHODS
 
+# tarfile 的 filter 参数（PEP 706 的路径清洗）是 3.12 才正式加入的，3.9~3.11 只有
+# 部分补丁版本被回移。这里探能力而不是比版本号：CI 的 3.10 就没有这个参数，
+# 硬传会 TypeError，等于整条 tar 解压链路在 3.10 上全废（真机上是一直没暴露）。
+_TAR_EXTRACT_KW = {"filter": "data"} if hasattr(tarfile, "data_filter") else {}
+
 # 扩展名 -> 内部格式标识
 _EXT_MAP = {
     ".cse": "cse",
@@ -306,7 +311,7 @@ def extract(path: str, dest: str, password: str = None, progress=None) -> list:
             total = len(members)
             for i, m in enumerate(members, 1):
                 legacy._safe_join(dest, m.name)
-                tf.extract(m, dest, filter="data")
+                tf.extract(m, dest, **_TAR_EXTRACT_KW)
                 if m.isfile():
                     written.append(os.path.join(dest, m.name))
                 if progress:

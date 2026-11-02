@@ -155,6 +155,9 @@ def build_parser():
 
 
 def main(argv=None):
+    from .console import setup_console
+
+    setup_console()      # 英文系统控制台是 cp1252，不先处理，第一句中文就把命令带走
     argv = list(sys.argv[1:] if argv is None else argv)
 
     # Windows 资源管理器集成：双击 .cse 打开界面 / 右键"用 CSE Compressor 解压"

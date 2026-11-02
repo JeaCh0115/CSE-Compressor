@@ -204,5 +204,58 @@ class TestNoOverwrite(unittest.TestCase):
         self.assertEqual(r["samples"], ["a.txt"])
 
 
+class TestTarCompat(unittest.TestCase):
+    """tarfile 的 filter 参数是 3.12 才加的。
+
+    CI 的 Python 3.10 没有这个参数，`tf.extract(m, dest, filter="data")` 直接
+    TypeError——整条 tar/tar.gz/tar.bz2/tar.xz 解压链路在 3.10 上全废，
+    而真机是 3.13 所以从来没暴露。这里把能力探针按「老版本」拆掉再解一遍。
+    """
+
+    def setUp(self):
+        import tempfile
+        self.tmp = tempfile.mkdtemp(prefix="cse_tar_compat_")
+        self.src = os.path.join(self.tmp, "src")
+        os.makedirs(os.path.join(self.src, "sub"))
+        with open(os.path.join(self.src, "a.txt"), "w", encoding="utf-8") as f:
+            f.write("alpha")
+        with open(os.path.join(self.src, "sub", "b.txt"), "w", encoding="utf-8") as f:
+            f.write("beta")
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_extract_kwarg_is_empty_without_data_filter(self):
+        """没有 data_filter 时不能传 filter 关键字。"""
+        import tarfile
+        if hasattr(tarfile, "data_filter"):
+            self.assertEqual(converters._TAR_EXTRACT_KW, {"filter": "data"})
+        else:
+            self.assertEqual(converters._TAR_EXTRACT_KW, {})
+
+    def test_tar_family_extracts_without_filter_kwarg(self):
+        for fmt, ext in (("tar", ".tar"), ("targz", ".tar.gz"),
+                         ("tarbz2", ".tar.bz2"), ("tarxz", ".tar.xz")):
+            with self.subTest(fmt=fmt):
+                arc = os.path.join(self.tmp, "x" + ext)
+                converters.create(arc, [self.src], fmt=fmt)
+                out = os.path.join(self.tmp, "out_" + fmt)
+                orig = converters._TAR_EXTRACT_KW
+                converters._TAR_EXTRACT_KW = {}      # 假装 tarfile 不支持 filter
+                try:
+                    import warnings
+                    with warnings.catch_warnings():
+                        # 模拟老 tarfile 时 3.13 会警告「3.14 起默认要过滤」，
+                        # 这里正是故意不传 filter，警告是预期的，别脏了测试输出
+                        warnings.simplefilter("ignore", DeprecationWarning)
+                        files = converters.extract(arc, out)
+                finally:
+                    converters._TAR_EXTRACT_KW = orig
+                names = sorted(os.path.basename(p) for p in files)
+                self.assertEqual(names, ["a.txt", "b.txt"])
+                with open(os.path.join(out, "src", "a.txt"), encoding="utf-8") as f:
+                    self.assertEqual(f.read(), "alpha")
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
