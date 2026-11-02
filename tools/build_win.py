@@ -153,6 +153,17 @@ def make_payload():
     if not os.path.isdir(app_dir):
         raise SystemExit(f"缺少应用目录 {app_dir}")
     shutil.copy2(os.path.join(STAGE, "cse-cli.exe"), os.path.join(app_dir, "cse-cli.exe"))
+    # 第三方许可声明必须跟着二进制一起发（MIT/BSD 要保留声明，PyInstaller 引导代码
+    # 是 GPL-2.0+Exception，都得附许可文本），否则分发出去就是不合规的。
+    # 而且要从**刚打出来的这份包**里重新生成，保证列出的就是真正在包里的组件与版本。
+    from csengine import version as _ver
+    subprocess.run([PY, os.path.join(ROOT, "tools", "gen_notices.py"), "--pkg", app_dir,
+                    "--label", f"CSE-Compressor-{_ver.__version__} 安装包"], check=True)
+    notices = os.path.join(ROOT, "THIRD-PARTY-NOTICES.md")
+    if not os.path.isfile(notices):
+        raise SystemExit("缺少 THIRD-PARTY-NOTICES.md，先跑 python tools/gen_notices.py")
+    shutil.copy2(notices, os.path.join(app_dir, "THIRD-PARTY-NOTICES.md"))
+    shutil.copy2(os.path.join(ROOT, "LICENSE"), os.path.join(app_dir, "LICENSE.txt"))
     payload = os.path.join(BUILD, "payload.zip")
     os.makedirs(BUILD, exist_ok=True)
     if os.path.isfile(payload):

@@ -30,11 +30,12 @@ Windows 10/11 + Python 3.10+（开发机用 3.13）。引擎 `csengine/` 与命�
 2. 改代码。界面相关改完顺手 `python tools/ui_probe.py`。
 3. 如果修的是一个"只有真机才看得见"的问题（闪屏、焦点、窗口尺寸、原生提示），**加一个探针**而不是只靠截图口头保证：`tools/` 里现成的 `window_probe.py` / `frame_probe.py` / `tooltip_probe.py` 可以抄结构。
 4. 更新 `README.md` 里对应的能力描述（这个仓库的 README 是功能清单，不是装饰）。
+5. **动过依赖就重新生成 `THIRD-PARTY-NOTICES.md`**：`python tools/gen_notices.py`。打包时会从实际产物里自动重生成并塞进安装包，但仓库里这份要跟着提交——它列的是"随包分发了什么"，漏了就是许可不合规。
 
 ## 测试
 
 ```bash
-python -m unittest discover -s tests        # 97 项，约 10 秒
+python -m unittest discover -s tests        # 103 项，约 10 秒
 python tools/ui_probe.py                    # 55 项界面回归，需要 Edge
 python tools/dev_pipeline.py                # 全流水线：clean → compile → 测试 → 互操作矩阵 → 冒烟
 ```

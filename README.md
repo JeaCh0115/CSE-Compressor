@@ -8,7 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-3da639.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.10%2B-3776ab.svg)](https://www.python.org/)
 
-**当前版本：`0.1.0-beta.13`（Beta）** — 版本按 `主.次.修订-beta.N` 演进，每次打包把构建时间与构建号烧进发行件（关于对话框可见）。
+**当前版本：`0.1.0-beta.14`（Beta）** — 版本按 `主.次.修订-beta.N` 演进，每次打包把构建时间与构建号烧进发行件（关于对话框可见）。
 
 [下载安装包](https://github.com/JeaCh0115/CSE-Compressor/releases) · [从源码运行](#快速开始) · [命令行](#命令行)
 
@@ -63,11 +63,12 @@ CSE/
 │   └── app.py          # 旧版 Tkinter 界面（保留）
 ├── packaging/          # Windows 打包：应用入口 / 安装器 / 版本资源
 ├── assets/icons/       # 应用图标 + 全格式文件图标族（tools/make_icons.py 生成）
-├── tests/              # 97 个单元测试
+├── tests/              # 103 个单元测试
 ├── tools/
 │   ├── dev_pipeline.py # 全自动开发流水线
 │   ├── build_win.py    # 一键打包：exe + 便携版 + 独立安装程序
 │   ├── make_icons.py   # 图标族生成
+│   ├── gen_notices.py  # 从实际打包的 dist-info 里抄出第三方许可，生成 THIRD-PARTY-NOTICES.md
 │   ├── ui_probe.py     # 界面回归 55 项（Edge headless + CDP）
 │   ├── window_probe.py # 原生窗口 11 项（尺寸/样式位/四边命中/真实拖动）
 │   ├── frame_probe.py  # 启动首帧：断言「先出画后亮窗」（无黑屏）
@@ -89,7 +90,8 @@ CSE/
 │   ├── bench_compress.py # 压缩吞吐基准
 │   └── startup_probe.py  # 冷启动耗时
 ├── docs/screenshots/   # README 用的界面图（tools/readme_shot.py 生成）
-├── .github/workflows/  # CI：Windows 上编译 + 97 项单测 + CLI 冒烟
+├── .github/workflows/  # CI：Windows 上编译 + 103 项单测 + CLI 冒烟
+├── THIRD-PARTY-NOTICES.md # 随包分发的第三方组件、版本与许可原文（gen_notices.py 生成）
 ├── requirements.txt    # 运行依赖（引擎与 CLI 零依赖）
 ├── CONTRIBUTING.md     # 开发约定 / 探针使用说明
 └── run.py              # 统一启动器
@@ -161,13 +163,13 @@ python tools/dev_pipeline.py             # 常规 8 步
 python tools/dev_pipeline.py --win       # 追加：exe+安装程序打包与安装/卸载自检
 ```
 
-一键执行：**clean → compile → 97 项测试 → 压缩率报表 + CSE-X 能力对比 → 7 格式互操作矩阵 → 界面服务全链路冒烟（菜单栏/关于/设置 API/上传/加密压缩/预览/解压）→ 桌面外壳导入自检 →（--win）Windows 打包 → dogfood 打包发布件**，任一环节失败即中止。
+一键执行：**clean → compile → 103 项测试 → 压缩率报表 + CSE-X 能力对比 → 7 格式互操作矩阵 → 界面服务全链路冒烟（菜单栏/关于/设置 API/上传/加密压缩/预览/解压）→ 桌面外壳导入自检 →（--win）Windows 打包 → dogfood 打包发布件**，任一环节失败即中止。
 
 ## 参与开发
 
 ```bash
 pip install -r requirements-dev.txt
-python -m unittest discover -s tests -v   # 97 项单元测试，纯标准库，无需图形环境
+python -m unittest discover -s tests -v   # 103 项单元测试，纯标准库，无需图形环境
 python tools/ui_probe.py                  # 界面端到端回归 55 项（用真实 Edge + CDP 驱动）
 ```
 
@@ -179,4 +181,6 @@ python tools/ui_probe.py                  # 界面端到端回归 55 项（用�
 
 [MIT](LICENSE) © 2026 JeaCh0115
 
-第三方依赖与参考实现列在程序「关于」对话框（`csengine/_opensource.py`）里，一并致谢。
+**本项目以 MIT 协议发布。安装包内还打包了 CPython 运行时、PyInstaller 引导代码（GPL-2.0 + Bootloader Exception）以及 pywebview / pythonnet / py7zr 等第三方库，它们各自的使用受其自身许可约束——完整清单、版本与许可原文见 [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md)（安装目录里也放了一份）。界面渲染依赖的 Microsoft Edge WebView2 运行时属于系统组件，不在安装包内分发，其使用受 Microsoft 的软件许可条款约束。**
+
+第三方组件与致谢同时列在程序「关于」对话框（`csengine/_opensource.py`）里。

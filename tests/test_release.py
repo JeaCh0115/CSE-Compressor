@@ -507,6 +507,64 @@ class TestArchiveProgId(unittest.TestCase):
         self.assertIsInstance(winassoc.resolve_open_exe(".zip"), str)
 
 
+class TestThirdPartyNotices(unittest.TestCase):
+    """分发二进制时保留第三方声明是硬性义务，不是"补充说明"。
+
+    MIT / BSD-3 要求保留版权与许可全文；PyInstaller 引导代码是 GPL-2.0 +
+    Bootloader Exception，随包分发必须附许可文本；py7zr 一系是 LGPL-2.1。
+    这份文件由 tools/gen_notices.py 从实际打包的 dist-info 里生成，不许手写。
+    """
+
+    ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    def _read(self, *parts):
+        with open(os.path.join(self.ROOT, *parts), encoding="utf-8") as f:
+            return f.read()
+
+    def test_notices_file_exists_and_lists_bundled_components(self):
+        txt = self._read("THIRD-PARTY-NOTICES.md")
+        for name in ("pywebview", "pythonnet", "clr_loader", "py7zr",
+                     "pyppmd", "inflate64", "multivolumefile", "pycryptodomex"):
+            self.assertIn(name, txt, f"第三方声明里没有 {name}")
+        self.assertIn("PyInstaller", txt)
+        self.assertIn("CPython", txt)
+        self.assertIn("WebView2", txt)
+
+    def test_notices_carry_full_license_texts(self):
+        txt = self._read("THIRD-PARTY-NOTICES.md")
+        self.assertIn("## 三、许可原文", txt)
+        # 许可原文必须真的抄进来，不能只写个名字
+        self.assertIn("Permission is hereby granted, free of charge", txt)   # MIT
+        self.assertIn("GNU LESSER GENERAL PUBLIC LICENSE", txt)              # LGPL-2.1
+        self.assertIn("Redistribution and use in source and binary forms", txt)  # BSD
+        self.assertIn("Python Software Foundation", txt)                     # PSF
+        self.assertGreater(len(txt), 20000, "许可原文太短，八成只写了摘要")
+
+    def test_webview2_is_stated_as_not_redistributed(self):
+        """WebView2 是系统组件，说成"随包分发"反而是错的（也可能违反 MS 条款）。"""
+        txt = self._read("THIRD-PARTY-NOTICES.md")
+        self.assertIn("不随本包分发", txt)
+        self.assertIn("Microsoft", txt)
+
+    def test_build_copies_notices_into_package(self):
+        src = self._read("tools", "build_win.py")
+        start = src.index("def make_payload")
+        body = src[start:start + 1600]
+        self.assertIn("THIRD-PARTY-NOTICES.md", body, "打包时没把第三方声明放进安装包")
+        self.assertIn("LICENSE.txt", body, "打包时没把 MIT 正文放进安装包")
+        self.assertIn("gen_notices.py", body, "声明没从实际打包结果重新生成")
+
+    def test_readme_states_distribution_licenses(self):
+        md = self._read("README.md")
+        self.assertIn("THIRD-PARTY-NOTICES.md", md)
+        self.assertIn("PyInstaller", md)
+        self.assertIn("WebView2", md)
+
+    def test_generator_is_importable(self):
+        import py_compile
+        py_compile.compile(os.path.join(self.ROOT, "tools", "gen_notices.py"), doraise=True)
+
+
 class TestConsoleEncoding(unittest.TestCase):
     """英文版 Windows 控制台是 cp1252，中文输出会抛 UnicodeEncodeError。
 
